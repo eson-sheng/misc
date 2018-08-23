@@ -3,6 +3,8 @@
 narrowImg(600, './img', './img2');
 //narrowImg(300, './img', './img'); //覆盖到原目录
 
+echo '程序运行完毕。';
+
 /*
  * 缩小指定目录内的图片，并放入指定目录。
  * @param $maxHeight 图片的最大高度（如果图片高度小于此高度，则不进行缩小）
@@ -28,20 +30,23 @@ function narrowImg($maxHeight, $fromDir, $toDir)
             }
             continue;
         }
-        $path_info = pathinfo($full_path);
         $img_resource = null;
-        switch ($path_info['extension']) {
-            case 'gif':
+        $type_num = exif_imagetype($full_path);
+        if(!$type_num){
+            continue;
+        }
+        switch ($type_num) {
+            case IMAGETYPE_GIF:
                 $img_resource = imagecreatefromgif($full_path);
                 break;
-            case 'jpg':
-            case 'jpeg':
+            case IMAGETYPE_JPEG:
                 $img_resource = imagecreatefromjpeg($full_path);
                 break;
-            case 'png':
+            case IMAGETYPE_PNG:
                 $img_resource = imagecreatefrompng($full_path);
                 break;
             default:
+                $not_img=true;
                 break;
         }
         $width = imagesx($img_resource);
@@ -61,7 +66,7 @@ function narrowImg($maxHeight, $fromDir, $toDir)
             }
             imagedestroy($new_resource);
         } else {
-            if ($toDir !== '') {//复制到新目录
+            if ($toDir !== $fromDir) {//复制到新目录
                 copy($full_path, $toDir . '/' . $path);
             }
         }
