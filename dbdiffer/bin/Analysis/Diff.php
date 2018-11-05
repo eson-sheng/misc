@@ -12,6 +12,7 @@ use PDO;
 
 /**
  * Class Diff
+ * @package Analysis
  */
 class Diff
 {
@@ -20,6 +21,10 @@ class Diff
     /*数据库*/
     private $_db = null;
 
+    /**
+     * Diff constructor.
+     * @param $config
+     */
     public function __construct ($config)
     {
         $this->config = $config;
@@ -28,6 +33,9 @@ class Diff
         $this->_db->exec('SET NAMES ' . $config['charset']);
     }
 
+    /**
+     *
+     */
     public function index ()
     {
         /*页面方式选择出要比较的文件*/
@@ -150,7 +158,7 @@ EOF;
     }
 
     /**
-     *
+     * @return string
      */
     private function analysis ()
     {
@@ -169,11 +177,11 @@ EOF;
             }
         }
         /*写入文件，删除零时文件*/
-        $a = substr(pathinfo($_POST['file_a'],PATHINFO_FILENAME),0,2);
-        $b = substr(pathinfo($_POST['file_b'],PATHINFO_FILENAME),0,2);
+        $a = substr(pathinfo($_POST['file_a'], PATHINFO_FILENAME), 0, 2);
+        $b = substr(pathinfo($_POST['file_b'], PATHINFO_FILENAME), 0, 2);
 
-        file_put_contents("./out/{$a}-{$b}-{$a}.txt",$file_a_str);
-        file_put_contents("./out/{$a}-{$b}-{$b}.txt",$file_b_str);
+        file_put_contents("./out/{$a}-{$b}-{$a}.txt", $file_a_str);
+        file_put_contents("./out/{$a}-{$b}-{$b}.txt", $file_b_str);
 
         unlink("./out/tmp.txt");
 
@@ -183,17 +191,21 @@ EOF;
         ]);
     }
 
+    /**
+     * @param $str
+     * @return string
+     */
     private function file_str ($str)
     {
         /*找出表名字*/
         $pattern_table_name = "/INTO `(.*?)` VALUES/";
-        if (preg_match($pattern_table_name, $str, $match_table_name)){
+        if (preg_match($pattern_table_name, $str, $match_table_name)) {
             $table_name = $match_table_name[1];
         }
         /*找出表数据*/
         $pattern_table_value = "/VALUES \((.*?)\);/";
-        if (preg_match($pattern_table_value, $str, $match_table_value)){
-            $table_value_arr = explode(",",$match_table_value[1]);
+        if (preg_match($pattern_table_value, $str, $match_table_value)) {
+            $table_value_arr = explode(",", $match_table_value[1]);
         }
         /*找出表头名称*/
         $sql = "
@@ -206,8 +218,8 @@ EOF;
         $file_str_row = "--- table {$table_name}----\n\n";
         $i = 0;
         foreach ($ret as $row) {
-             $file_str_row .= "{$row['COLUMN_NAME']} {$row['COLUMN_COMMENT']} : {$table_value_arr[$i]}\n";
-             $i++;
+            $file_str_row .= "{$row['COLUMN_NAME']} {$row['COLUMN_COMMENT']} : {$table_value_arr[$i]}\n";
+            $i++;
         }
         $file_str_row .= "\n";
         return $file_str_row;
