@@ -66,7 +66,6 @@ class Diff
      */
     private function FacilitateFile ($path, &$files = [])
     {
-        $files = [];
         $handle = opendir($path);//打开目录句柄
         if ($handle) {
             while (($file = readdir($handle)) == true) {
