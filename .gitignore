@@ -6,3 +6,6 @@
 
 # sql
 /dbdiffer/dump
+
+# config
+/dbdiffer/config/local_web.php
