@@ -1,0 +1,8 @@
+# phpstorm
+.idea
+
+# out
+/dbdiffer/out/*.txt
+
+# sql
+/dbdiffer/dump
