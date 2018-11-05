@@ -74,6 +74,10 @@ class Diff
                     if (is_dir($p)) {
                         $this->FacilitateFile($p, $files);
                     } else {
+                        $enc = mb_detect_encoding($p, "gb2312", true);
+                        if ($enc === 'EUC-CN') {
+                            $p = iconv("gbk", "utf-8", $p);
+                        }
                         $files[] = $p;
                     }
                 }
@@ -125,13 +129,30 @@ EOF;
     /**
      * @param $a
      * @param $b
-     * @return string|void
+     * @return array
      */
     private function compare ($a, $b)
     {
+        // 如果不是文件则尝试转换编码
+        if (!is_file($a)) {
+            $a = iconv("utf-8", "gbk", $a);
+            $b = iconv("utf-8", "gbk", $b);
+        }
+        if (!is_file($a)) {
+            return json_encode([
+                'status' => FALSE,
+                'error' => "文件:'$a'不存在！",
+            ]);
+        }
+        if (!is_file($b)) {
+            return json_encode([
+                'status' => FALSE,
+                'error' => "文件:'$b'不存在！",
+            ]);
+        }
         $this->shell(["diff {$a} {$b} > ./out/tmp.txt"]);
         if (is_file(__DIR__ . "/../../out/tmp.txt")) {
-            return $this->analysis();
+            return $this->analysis($a, $b);
         } else {
             return json_encode([
                 'status' => FALSE,
@@ -157,12 +178,12 @@ EOF;
     }
 
     /**
-     * @return string
+     * @return array
      */
-    private function analysis ()
+    private function analysis ($a, $b)
     {
         $file_path = "./out/tmp.txt";
-        $txt = file_get_contents($file_path);
+        $txt = $this->file_get_contents_ex($file_path);
         $arr = explode("\n", $txt);
         $file_a_str = '';
         $file_b_str = '';
@@ -176,8 +197,8 @@ EOF;
             }
         }
         /*写入文件，删除零时文件*/
-        $a = substr(pathinfo($_POST['file_a'], PATHINFO_FILENAME), 0, 2);
-        $b = substr(pathinfo($_POST['file_b'], PATHINFO_FILENAME), 0, 2);
+        $a = pathinfo($a, PATHINFO_FILENAME);
+        $b = pathinfo($b, PATHINFO_FILENAME);
 
         file_put_contents("./out/{$a}-{$b}-{$a}.txt", $file_a_str);
         file_put_contents("./out/{$a}-{$b}-{$b}.txt", $file_b_str);
@@ -208,7 +229,7 @@ EOF;
         }
         /*找出表头名称*/
         $sql = "
-        SELECT COLUMN_NAME,column_comment FROM INFORMATION_SCHEMA.Columns WHERE table_name='{$table_name}' AND table_schema='{$this->config['database']}';
+        SELECT COLUMN_NAME,COLUMN_COMMENT FROM INFORMATION_SCHEMA.Columns WHERE table_name='{$table_name}' AND table_schema='{$this->config['database']}';
         ";
         $query = $this->_db->prepare($sql);
         $query->execute();
@@ -222,6 +243,25 @@ EOF;
         }
         $file_str_row .= "\n";
         return $file_str_row;
+    }
+
+
+    // 尝试gbk、utf-8两种编码；优先尝试传入编码
+    private function file_get_contents_ex($path)
+    {
+        if (is_file($path)) {
+            return file_get_contents($path);
+        }
+        $enc = mb_detect_encoding($path, "gb2312", true);
+        if ($enc === 'EUC-CN') {
+            $path2 = iconv("gbk", "utf-8", $path);
+        } else {
+            $path2 = iconv("utf-8", "gbk", $path);
+        }
+        if (is_file($path2)) {
+            return file_get_contents($path2);
+        }
+        return false;
     }
 
 }
