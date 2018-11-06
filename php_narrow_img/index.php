@@ -39,7 +39,7 @@ function narrowImg($maxHeight, $fromDir, $toDir, $backupDir = '')
             copy($full_path,$backupDir . '/' . $path);
         }
         $img_resource = null;
-        $type_num = exif_imagetype($full_path);
+        $type_num = @exif_imagetype($full_path);
         if (!$type_num) {
             continue;
         }

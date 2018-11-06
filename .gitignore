@@ -9,3 +9,6 @@
 
 # config
 /dbdiffer/config/local_web.php
+
+# img backup
+/php_narrow_img/backup/*
