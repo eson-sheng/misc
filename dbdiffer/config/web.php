@@ -14,4 +14,5 @@ return [
     'charset' => 'utf8',
     'sql_file_path' => 'dump',
     'out_path' => 'out',
+    'GBK' => strpos(strtolower(PHP_OS), 'win') === 0,
 ];

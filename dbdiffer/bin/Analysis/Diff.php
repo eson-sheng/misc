@@ -76,8 +76,7 @@ class Diff
                     if (is_dir($p)) {
                         $this->FacilitateFile($p, $files);
                     } else {
-                        $enc = mb_detect_encoding($p, "gb2312", true);
-                        if ($enc === 'EUC-CN') {
+                        if ($this->config["GBK"]) {
                             $p = iconv("gbk", "utf-8", $p);
                         }
                         $files[] = $p;
@@ -113,7 +112,7 @@ class Diff
     private function compare ($a, $b)
     {
         // 如果不是文件则尝试转换编码
-        if (!is_file($a)) {
+        if ($this->config["GBK"]) {
             $a = iconv("utf-8", "gbk", $a);
             $b = iconv("utf-8", "gbk", $b);
         }
@@ -188,6 +187,10 @@ class Diff
 
         unlink("./out/tmp.txt");
 
+        if ($this->config["GBK"]) {
+            $a = iconv("GBK", "utf-8", $a);
+            $b = iconv("GBK", "utf-8", $b);
+        }
         return json_encode([
             'status' => TRUE,
             'error' => "请查看./out目录下：./out/{$a}-{$b}-{$a}.txt ./out/{$a}-{$b}-{$b}.txt",
