@@ -34,23 +34,23 @@ class Diff
     }
 
     /**
-     *
+     * @return bool
      */
     public function index ()
     {
         /*页面方式选择出要比较的文件*/
         $files = $this->FacilitateFile($this->config['sql_file_path']);
 
-        if (empty($_POST)) {
+        if (empty($_GET)) {
             $this->select_file_html($files);
             return FALSE;
-        } else if (empty($_POST['file_a']) || empty($_POST['file_b'])) {
+        } else if (empty($_GET['file_a']) || empty($_GET['file_b'])) {
             echo "<script>alert(\"参数错误，请重新选择！\");window.history.back();</script>";
             return FALSE;
         } else {
             /*业务比较*/
-            $file_a = $_POST['file_a'];
-            $file_b = $_POST['file_b'];
+            $file_a = $_GET['file_a'];
+            $file_b = $_GET['file_b'];
             /*比较生成零时差异文件*/
             $json = $this->compare($file_a, $file_b);
             $arr = json_decode($json, TRUE);

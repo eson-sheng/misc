@@ -5,7 +5,7 @@
 </head>
 <body>
 <div>
-    <form id="form" action="index.php" method="POST" enctype="multipart/form-data">
+    <form id="form" action="index.php" method="GET" enctype="multipart/form-data">
         <select name="file_a" id="file_a">
             <option value="">==请选择==</option>
             <?= $html_option; ?>
