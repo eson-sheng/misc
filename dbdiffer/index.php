@@ -16,5 +16,6 @@ if (is_file(__DIR__ . '/config/local_web.php')) {
 }
 
 use Analysis\Diff;
+
 $index = new Diff($config);
 $index->index();

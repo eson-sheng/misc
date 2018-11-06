@@ -40,20 +40,22 @@ class Diff
     {
         /*页面方式选择出要比较的文件*/
         $files = $this->FacilitateFile($this->config['sql_file_path']);
-        $html = $this->select_file_html($files);
 
         if (empty($_POST)) {
-            echo $html;
+            $this->select_file_html($files);
+            return FALSE;
         } else if (empty($_POST['file_a']) || empty($_POST['file_b'])) {
-            $html .= "<script>alert(\"参数错误，请重新选择\");</script>";
-            echo $html;
+            echo "<script>alert(\"参数错误，请重新选择！\");window.history.back();</script>";
+            return FALSE;
         } else {
             /*业务比较*/
             $file_a = $_POST['file_a'];
             $file_b = $_POST['file_b'];
             /*比较生成零时差异文件*/
             $json = $this->compare($file_a, $file_b);
-            echo $json;
+            $arr = json_decode($json, TRUE);
+            $this->compare_file_html($arr['a'], $arr['b']);
+            return TRUE;
         }
     }
 
@@ -98,38 +100,15 @@ class Diff
         foreach ($files as $file) {
             $html_option .= "<option value=\"{$file}\">{$file}</option>";
         }
-        $html = <<<EOF
-        <!DOCTYPE html>
-        <html lang="zh">
-            <head>
-                <meta charset="UTF-8">
-                <title>请选择需要对比的sql文件</title>
-            </head>
-            <body>
-                <div>
-                    <form action="index.php" method="POST" enctype="multipart/form-data">
-                        <select name="file_a" id="file_a">
-                            <option value="">==请选择==</option>
-                            {$html_option}
-                        </select>
-                        <select name="file_b" id="file_b">
-                            <option value="">==请选择==</option>
-                            {$html_option}
-                        </select>
-                        <input type="submit" id="submit" value="提交">
-                        <input type="reset"  id="reset" value="重置">
-                    </form>
-                </div>
-            </body>
-        </html>
-EOF;
-        return $html;
+        return require_once __DIR__ . "/view/select_file_html.php";
     }
 
     /**
+     * 利用diff将两个文件差异记录在零时文件中。
+     *
      * @param $a
      * @param $b
-     * @return array
+     * @return string
      */
     private function compare ($a, $b)
     {
@@ -178,7 +157,11 @@ EOF;
     }
 
     /**
-     * @return array
+     * 解析差异的零时文件，分成两类文件。
+     *
+     * @param $a
+     * @param $b
+     * @return string
      */
     private function analysis ($a, $b)
     {
@@ -207,7 +190,9 @@ EOF;
 
         return json_encode([
             'status' => TRUE,
-            'error' => '请查看./out目录',
+            'error' => "请查看./out目录下：./out/{$a}-{$b}-{$a}.txt ./out/{$a}-{$b}-{$b}.txt",
+            'a' => "./out/{$a}-{$b}-{$a}.txt",
+            'b' => "./out/{$a}-{$b}-{$b}.txt",
         ]);
     }
 
@@ -225,7 +210,7 @@ EOF;
         /*找出表数据*/
         $pattern_table_value = "/VALUES \((.*?)\);/";
         if (preg_match($pattern_table_value, $str, $match_table_value)) {
-            $table_value_arr = explode(",", $match_table_value[1]);
+            $table_value_arr = $this->analysis_field($match_table_value[1]);
         }
         /*找出表头名称*/
         $sql = "
@@ -245,9 +230,36 @@ EOF;
         return $file_str_row;
     }
 
+    /**
+     * 解析字段字符串
+     *
+     * @param $str
+     * @return mixed
+     */
+    private function analysis_field ($str)
+    {
+        $return_arr = [];
+        eval('$return_arr = [' . $str . '];');
+        return $return_arr;
+    }
 
-    // 尝试gbk、utf-8两种编码；优先尝试传入编码
-    private function file_get_contents_ex($path)
+    /**
+     * @param $a
+     * @param $b
+     * @return string
+     */
+    private function compare_file_html ($a, $b)
+    {
+        return require_once __DIR__ . "/view/commpare_file_html.php";
+    }
+
+    /**
+     * 尝试gbk、utf-8两种编码；优先尝试传入编码
+     *
+     * @param $path
+     * @return bool|string
+     */
+    private function file_get_contents_ex ($path)
     {
         if (is_file($path)) {
             return file_get_contents($path);
