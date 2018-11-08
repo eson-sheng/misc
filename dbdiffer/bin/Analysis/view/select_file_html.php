@@ -4,19 +4,28 @@
     <title>请选择需要对比的sql文件</title>
 </head>
 <body>
-<div>
-    <form id="form" action="index.php" method="GET" enctype="multipart/form-data">
-        <select name="file_a" id="file_a">
-            <option value="">==请选择==</option>
-            <?= $html_option; ?>
-        </select>
-        <select name="file_b" id="file_b">
-            <option value="">==请选择==</option>
-            <?= $html_option; ?>
-        </select>
-        <input type="submit" id="submit" value="提交">
-        <input type="reset" id="reset" value="重置">
-    </form>
+<div style="width:1200px;margin:80px auto;">
+    <div>
+        <h3>数据库快照操作：</h3>
+        <code>
+mysqldump --skip-extended-insert --skip-dump-date -uroot -p[password] -P[port] [database_name] > [file_name].sql
+        </code>
+    </div>
+    <div>
+        <h3>对比快照之间数据的变化：</h3>
+        <form id="form" action="index.php" method="GET" enctype="multipart/form-data">
+            <select name="file_a" id="file_a">
+                <option value="">==请选择==</option>
+                <?= $html_option; ?>
+            </select>
+            <select name="file_b" id="file_b">
+                <option value="">==请选择==</option>
+                <?= $html_option; ?>
+            </select>
+            <input type="submit" id="submit" value="提交">
+            <input type="reset" id="reset" value="重置">
+        </form>
+    </div>
 </div>
 </body>
 <!--<script type="text/javascript">-->
