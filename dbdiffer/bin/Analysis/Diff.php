@@ -147,9 +147,9 @@ class Diff
         $sql_arr = $this->_sql_for_arr($sqls);
         $rs = "";
         foreach ($sql_arr as $sql) {
-            if (!empty($sql)) {
+            if (!empty(trim($sql))) {
                 $tmp_sql = $this->file_str("{$sql};");
-                $rs .= $tmp_sql ? "<pre>{$tmp_sql}</pre>" : "\n结构化语句解析失败，可能sql输入错误！请返回重新输入...\n";
+                $rs .= $tmp_sql ? "<pre>{$tmp_sql}</pre>" : "insert语句解析失败:'{$sql}'<br>";
             }
         }
         $return = $rs ? "<div>{$rs}</div>" : "\nFALSE\n";
