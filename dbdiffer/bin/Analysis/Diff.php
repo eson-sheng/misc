@@ -38,6 +38,33 @@ class Diff
      */
     public function index ()
     {
+        /*单独查看*/
+        if (!empty($_GET['mod_show'])
+            && !empty($_GET['alone_sql'])
+        ) {
+            $this->alone_sql_html($_GET['alone_sql']);
+            return TRUE;
+        }
+
+        /*选择出对比数据*/
+        if (!empty($_GET['mod_contrast'])
+            && !empty($_GET['alone_sql'])
+        ) {
+            $this->select_contrast_sql_html($_GET['alone_sql']);
+            return TRUE;
+        }
+
+        /*对比选择的数据*/
+        if (!empty($_GET['contrast'])
+            && !empty($_GET['contrast_a'])
+            && !empty($_GET['contrast_b'])
+        ) {
+            $lhs = $_GET['contrast_a'];
+            $rhs = $_GET['contrast_b'];
+            $this->compare_html($lhs, $rhs);
+            return TRUE;
+        }
+
         /*页面方式选择出要比较的文件*/
         $files = $this->FacilitateFile($this->config['sql_file_path']);
 
@@ -45,7 +72,7 @@ class Diff
             $this->select_file_html($files);
             return FALSE;
         } else if (empty($_GET['file_a']) || empty($_GET['file_b'])) {
-            echo "<script>alert(\"参数错误，请重新选择！\");window.history.back();</script>";
+            echo "<script>alert(\"参数错误，请重新选择或填写！\");window.history.back();</script>";
             return FALSE;
         } else {
             /*业务比较*/
@@ -57,6 +84,15 @@ class Diff
             $this->compare_file_html($arr['a'], $arr['b']);
             return TRUE;
         }
+    }
+
+    /**
+     * @param $sqls
+     * @return array
+     */
+    private function _sql_for_arr ($sqls)
+    {
+        return explode(";", $sqls);
     }
 
     /**
@@ -100,6 +136,65 @@ class Diff
             $html_option .= "<option value=\"{$file}\">{$file}</option>";
         }
         return require_once __DIR__ . "/view/select_file_html.php";
+    }
+
+    /**
+     * @param $sqls
+     * @return mixed
+     */
+    private function alone_sql_html ($sqls)
+    {
+        $sql_arr = $this->_sql_for_arr($sqls);
+        $rs = "";
+        foreach ($sql_arr as $sql) {
+            if (!empty($sql)) {
+                $tmp_sql = $this->file_str("{$sql};");
+                $rs .= $tmp_sql ? "<pre>{$tmp_sql}</pre>" : "\n结构化语句解析失败，可能sql输入错误！请返回重新输入...\n";
+            }
+        }
+        $return = $rs ? "<div>{$rs}</div>" : "\nFALSE\n";
+        return require_once __DIR__ . "/view/alone_html.php";
+    }
+
+    /**
+     * @param $sqls
+     * @return mixed
+     */
+    private function select_contrast_sql_html ($sqls)
+    {
+        $sql_arr = $this->_sql_for_arr($sqls);
+        $rs_a = "";
+        $rs_b = "";
+        foreach ($sql_arr as $sql) {
+            if (!empty($sql)) {
+                $tmp_a = $this->file_str("{$sql};");
+                $rs_a .= "
+                <span><input type=\"radio\" name=\"contrast_a\" value=\"{$tmp_a}\">
+                {$sql}</span>
+                ";
+                $tmp_b = $this->file_str("{$sql};");
+                $rs_b .= "
+                <span><input type=\"radio\" name=\"contrast_b\" value=\"{$tmp_b}\">
+                {$sql}</span>
+                ";
+            }
+        }
+        return require_once __DIR__ . "/view/select_contrast_sql_html.php";
+    }
+
+    /**
+     * @param $lhs
+     * @param $rhs
+     * @return mixed
+     */
+    private function compare_html ($lhs, $rhs)
+    {
+        if (!file_exists("./out/tmp")) {
+            mkdir('./out/tmp', 0777, true);
+        }
+        file_put_contents("./out/tmp/a.txt", $lhs);
+        file_put_contents("./out/tmp/b.txt", $rhs);
+        return require_once __DIR__ . "/view/compare_html.php";
     }
 
     /**
@@ -215,6 +310,12 @@ class Diff
         if (preg_match($pattern_table_value, $str, $match_table_value)) {
             $table_value_arr = $this->analysis_field($match_table_value[1]);
         }
+
+        /*验证*/
+        if (empty($table_name)) {
+            return FALSE;
+        }
+
         /*找出表头名称*/
         $sql = "
         SELECT COLUMN_NAME,COLUMN_COMMENT FROM INFORMATION_SCHEMA.Columns WHERE table_name='{$table_name}' AND table_schema='{$this->config['database']}';
@@ -226,8 +327,10 @@ class Diff
         $file_str_row = "--- table {$table_name}----\n\n";
         $i = 0;
         foreach ($ret as $row) {
-            $file_str_row .= "{$row['COLUMN_NAME']} {$row['COLUMN_COMMENT']} : {$table_value_arr[$i]}\n";
-            $i++;
+            if (!empty($table_value_arr)) {
+                $file_str_row .= "{$row['COLUMN_NAME']} {$row['COLUMN_COMMENT']} : {$table_value_arr[$i]}\n";
+                $i++;
+            }
         }
         $file_str_row .= "\n";
         return $file_str_row;

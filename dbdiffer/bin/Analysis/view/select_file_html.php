@@ -26,30 +26,19 @@ mysqldump --skip-extended-insert --skip-dump-date -uroot -p[password] -P[port] [
             <input type="reset" id="reset" value="重置">
         </form>
     </div>
+    <div>
+        <h3>快速单独查看或对比数据变化：</h3>
+        <form id="alone_from" action="index.php" method="GET" enctype="multipart/form-data">
+            <textarea name="alone_sql" id="alone_sql" cols="125" rows="10"
+                      placeholder="eg:
+INSERT INTO `product_order` VALUES ('4028218166dcfcf40166de4b27eb000c','system','2018-11-04 18:35:59',0,3000.00,14.50,NULL,14.50,NULL,'PP1810121746916',0,'J181104183559334817','20181104','J181104183559334817','PJK2018110418355900011','PP1810121746916','2018-11-04 18:35:59',1,NULL,'4028218166da2a890166da2b6b9500a4',3000,1,'PP1810121746916',1.00000000,1,'ff80808162272ed1016227340b250002',0,'system','2018-11-04 18:35:59',0,'支付成功',1,'6210193310200514239','秦尉寒',NULL,0.0600,NULL);
+"></textarea>
+            <br>
+            <input type="submit" id="submit" name="mod_show" value="单独查看">
+            <input type="submit" id="submit" name="mod_contrast" value="对比数据">
+            <input type="reset" id="reset" value="重置">
+        </form>
+    </div>
 </div>
 </body>
-<!--<script type="text/javascript">-->
-<!--    window.onload = function () {-->
-<!--        document.getElementById('submit').onclick = function (event) {-->
-<!--            event.preventDefault();-->
-<!--            var xmlhttp, params, obj, form;-->
-<!--            params = [];-->
-<!--            form = document.getElementById("form");-->
-<!--            obj = document.querySelectorAll('input,select');-->
-<!--            for (var i = obj.length - 1; i >= 0; i--) {-->
-<!--                params += encodeURIComponent(obj[i].name) + '=' + encodeURIComponent(obj[i].value) + '&';-->
-<!--            }-->
-<!--            // console.log(params);-->
-<!--            xmlhttp = new XMLHttpRequest();-->
-<!--            xmlhttp.open("POST", form.action, true);-->
-<!--            xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");-->
-<!--            xmlhttp.send(params);-->
-<!--            xmlhttp.onreadystatechange = function () {-->
-<!--                var data = xmlhttp.responseText;-->
-<!--                var json = eval("(" + data + ")");-->
-<!--                alert(json.error);-->
-<!--            }-->
-<!--        }-->
-<!--    }-->
-<!--</script>-->
 </html>

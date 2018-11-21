@@ -3,6 +3,7 @@
 
 # out
 /dbdiffer/out/*.txt
+/dbdiffer/out/tmp/*.txt
 
 # sql
 /dbdiffer/dump
