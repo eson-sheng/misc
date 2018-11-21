@@ -2,8 +2,7 @@
 .idea
 
 # out
-/dbdiffer/out/*.txt
-/dbdiffer/out/tmp/*.txt
+/dbdiffer/out
 
 # sql
 /dbdiffer/dump
