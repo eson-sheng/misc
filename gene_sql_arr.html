@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>sql 数组生成</title>
+    <script src="pi.js"></script>
+    <script src="config.js"></script>
+    <script src="jquery-1.7.2.js"></script>
+
+</head>
+<body>
+<script>
+
+    $(function () {
+        config = createConfig("agreement_path", ["src"]);
+    });
+
+    function save_test() {
+        config.saveCtrls();
+    }
+
+    function l(s) {
+        console.log(s);
+    }
+
+    /**
+     * -----输入：
+8a9aee2d630b3f0401641c42f1fe4972
+8a9aee2d630b3f040164637339322577
+8a9aee2d630b3f04016467ffb20f2a79
+
+输出：
+('8a9aee2d630b3f0401641c42f1fe4972', 8a9aee2d630b3f040164a68e984d0145	'8a9aee2d630b3f040164637339322577', '8a9aee2d630b3f04016467ffb20f2a79')
+
+select * from member where id in ('8a9aee2d630b3f0401641c42f1fe4972', '8a9aee2d630b3f040164637339322577', '8a9aee2d630b3f04016467ffb20f2a79')
+
+     */
+    function gene() {
+
+        config.saveCtrls();
+        var content = $("#src").val();
+
+        var lines = content.split("\n");
+         //var pattern = /\w+\t\w+\d+/;
+        var pattern = /\w+/;
+        var r1 = "";
+        var r2 = "";
+		
+        for (var line of lines) {
+            if (line) {
+                var id = line.split("\t")[0];
+                var m = line.split("\t")[1];//.match(/\d+/)
+				 r2 += "'"+id+"',";
+               
+            }
+            
+        }
+		r2 = r2.substring(0,r2.length-1);
+		
+        $("#dest").val("("+r2+")");
+    }
+</script>
+<p>输入多行，生成('line one', 'line two', ...)</p>
+<textarea id="src" style="width: 90%; height: 200px"></textarea>
+<br>
+<button onclick="gene();">gene</button>
+<br>
+<textarea id="dest" style="width: 90%; height: 200px"></textarea>
+<br>
+
+</body>
+</html>

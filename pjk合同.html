@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>合同copy脚本生成</title>
+    <script src="pi.js"></script>
+    <script src="config.js"></script>
+    <script src="jquery-1.7.2.js"></script>
+
+</head>
+<body>
+<script>
+
+    $(function () {
+        config = createConfig("agreement_path", ["src"]);
+    });
+
+    function save_test() {
+        config.saveCtrls();
+    }
+
+    function l(s) {
+        console.log(s);
+    }
+
+    /**
+     * -----输入：
+     8a9aee2d630b3f040164a68e984d0145	银票宝9999期
+     8a9aee2d630b3f040164a5b512927efb	银票宝9998期
+
+     -----输出两组：
+     mkdir /tmp/inv/9999
+     mkdir /tmp/inv/9998
+
+     cp 8a9aee2d630b3f040164a68e984d0145/*.* /tmp/inv/9999
+     cp 8a9aee2d630b3f040164a5b512927efb/*.* /tmp/inv/9998
+     */
+    function gene() {
+
+        config.saveCtrls();
+        var content = $("#src").val();
+
+        var lines = content.split("\n");
+        // var pattern = /\w+\t\w+\d+/;
+        var pattern = /\w+/;
+        var r1 = "";
+        var r2 = "";
+        for (var line of lines) {
+            if (line) {
+                var id = line.split("\t")[0];
+                var m = line.split("\t")[1].match(/\d+/);
+                if (m) {
+                    var num = m[0];
+                    r1 += "mkdir -p /tmp/inv/" + num + "\n";
+                    r2 += "cp /data/webapp/p2p/data/agreement/investor/" + id + "/*.* /tmp/inv/" + num + "\n";
+                }
+            }
+        }
+        $("#dest").val(r1 + "\n\n\n" + r2);
+    }
+</script>
+<p>执行这个语句，将结果复制到下面：SELECT p.productId, p.productNm, groundTime from product p where groundTime > '2018-03-30'
+    ORDER BY productNm desc</p>
+<textarea id="src" style="width: 90%; height: 200px"></textarea>
+<br>
+<button onclick="gene();">gene</button>
+<br>
+<textarea id="dest" style="width: 90%; height: 200px"></textarea>
+<br>
+<p>再在manager上执行上面生成的命令</p>
+
+</body>
+</html>
