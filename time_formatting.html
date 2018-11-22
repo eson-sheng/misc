@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>时间格式化</title>
+    <script src="pi.js"></script>
+    <script src="config.js"></script>
+    <script src="jquery-1.7.2.js"></script>
+
+</head>
+<body>
+<script>
+
+    $(function () {
+        config = createConfig("time_formateing_path", ["src"]);
+        Date.prototype.format = function(fmt) { 
+             var o = { 
+                "M+" : this.getMonth()+1,                 //月份 
+                "d+" : this.getDate(),                    //日 
+                "h+" : this.getHours(),                   //小时 
+                "m+" : this.getMinutes(),                 //分 
+                "s+" : this.getSeconds(),                 //秒 
+                "q+" : Math.floor((this.getMonth()+3)/3), //季度 
+                "S"  : this.getMilliseconds()             //毫秒 
+            }; 
+            if(/(y+)/.test(fmt)) {
+                    fmt=fmt.replace(RegExp.$1, (this.getFullYear()+"").substr(4 - RegExp.$1.length)); 
+            }
+             for(var k in o) {
+                if(new RegExp("("+ k +")").test(fmt)){
+                     fmt = fmt.replace(RegExp.$1, (RegExp.$1.length==1) ? (o[k]) : (("00"+ o[k]).substr((""+ o[k]).length)));
+                 }
+             }
+            return fmt; 
+        }        
+    });
+
+    function save_test() {
+        config.saveCtrls();
+    }
+
+    function l(s) {
+        console.log(s);
+    }
+
+    /**
+     * 
+输入：
+3/29/2018 15:21:07
+4/10/2018 16:31:00
+4/10/2018 16:41:00
+4/19/2018 16:31:41
+4/19/2018 16:32:31
+
+输出：
+2018-3-29 15:21:07
+2018-4-10 16:31:00
+2018-4-10 16:41:00
+2018-4-19 16:31:41
+2018-4-19 16:32:31
+     */
+function gene() {
+    config.saveCtrls();
+    var content = $("#src").val();
+    var lines = content.split("\n");
+    var mine = "";
+    for (var line of lines) {
+        if (line) {
+            var oldTime = (new Date(line)).getTime();
+            var curTime = new Date(oldTime).format("yyyy-MM-dd hh:mm:ss");
+            mine += curTime + "\n";
+        }
+    }
+    $("#dest").val(mine);
+}
+</script>
+<p>输入不喜欢的时间：4/10/2018 16:31:00，生成喜欢的时间：2018-4-10 16:31:00</p>
+<textarea id="src" style="width: 90%; height: 200px"></textarea>
+<br>
+<button onclick="gene();">转换</button>
+<hr>
+<textarea id="dest" style="width: 90%; height: 200px"></textarea>
+<br>
+</body>
+</html>
