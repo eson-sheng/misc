@@ -43,4 +43,23 @@
     </div>
 </div>
 </body>
+<script type="text/javascript" src="../BitTools/public_link/js/jquery-1.7.2.js"></script>
+<script type="text/javascript">
+    $(function () {
+        /*两个自动选择开始对比*/
+        var input = $("input[name='contrast_a']");
+        var params = "";
+        var tmp = [];
+        if (input.length == 2) {
+            input.each(function (i) {
+                tmp[i] = $(this).val();
+            });
+            params += "contrast_a=" +
+                encodeURIComponent(tmp[0]) +
+                "&contrast_b=" + encodeURIComponent(tmp[1]) +
+                "&contrast=contrast";
+            location.href = 'index.php?' + params;
+        }
+    });
+</script>
 </html>
