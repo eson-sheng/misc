@@ -3,14 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>时间格式化</title>
-    <script src="pi.js"></script>
-    <script src="config.js"></script>
-    <script src="jquery-1.7.2.js"></script>
-
+    <script src="./public_link/js/pi.js"></script>
+    <script src="./public_link/js/config.js"></script>
+    <script src="./public_link/js/jquery-1.7.2.js"></script>
 </head>
 <body>
 <script>
-
     $(function () {
         config = createConfig("time_formateing_path", ["src"]);
         Date.prototype.format = function(fmt) { 
@@ -34,15 +32,6 @@
             return fmt; 
         }        
     });
-
-    function save_test() {
-        config.saveCtrls();
-    }
-
-    function l(s) {
-        console.log(s);
-    }
-
     /**
      * 
 输入：
@@ -74,7 +63,7 @@ function gene() {
     $("#dest").val(mine);
 }
 </script>
-<p>输入不喜欢的时间：4/10/2018 16:31:00，生成喜欢的时间：2018-4-10 16:31:00</p>
+<p>输入不喜欢的时间：15/11/2018 15:31:28，生成喜欢的时间：2018-11-15 15:31:28</p>
 <textarea id="src" style="width: 90%; height: 200px"></textarea>
 <br>
 <button onclick="gene();">转换</button>
