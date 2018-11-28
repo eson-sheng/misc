@@ -12,3 +12,4 @@
 
 # img backup
 /php_narrow_img/backup/*
+/ProjectImageScaling/tmp/*
