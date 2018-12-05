@@ -20,7 +20,7 @@ class ImgThumbnail
     /**
      * @param string $source 图片url
      * @param string $percent 默认就可以
-     * @param unknown $newImageName 保存图片的名称
+     * @param string $newImageName 保存图片的名称
      */
     public function __construct ($source, $percent, $newImageName)
     {
