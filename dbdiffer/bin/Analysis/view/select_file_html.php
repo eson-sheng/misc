@@ -34,11 +34,31 @@ mysqldump --skip-extended-insert --skip-dump-date -uroot -p[password] -P[port] [
 INSERT INTO `product_order` VALUES ('4028218166dcfcf40166de4b27eb000c','system','2018-11-04 18:35:59',0,3000.00,14.50,NULL,14.50,NULL,'PP1810121746916',0,'J181104183559334817','20181104','J181104183559334817','PJK2018110418355900011','PP1810121746916','2018-11-04 18:35:59',1,NULL,'4028218166da2a890166da2b6b9500a4',3000,1,'PP1810121746916',1.00000000,1,'ff80808162272ed1016227340b250002',0,'system','2018-11-04 18:35:59',0,'支付成功',1,'6210193310200514239','秦尉寒',NULL,0.0600,NULL);
 "></textarea>
             <br>
-            <input type="submit" id="submit" name="mod_show" value="单独查看">
-            <input type="submit" id="submit" name="mod_contrast" value="对比数据">
+            <input type="submit" id="submit_mod_show" name="mod_show" value="单独查看">
+            <input type="submit" id="submit_mod_contrast" name="mod_contrast" value="对比数据">
             <input type="reset" id="reset" value="重置">
         </form>
     </div>
 </div>
 </body>
+<script type="text/javascript" src="./js/pi.js"></script>
+<script type="text/javascript" src="./js/config.js"></script>
+<script type="text/javascript" src="./js/jquery.min.js"></script>
+<script type="text/javascript">
+$(function(){
+    config = createConfig("save_input", ["file_a", "file_b", "alone_sql"]);
+
+    $("#submit").click(function(){
+        config.saveCtrls();
+    });
+    
+    $("#submit_mod_show").click(function(){
+        config.saveCtrls();
+    });
+    
+    $("#submit_mod_contrast").click(function(){
+        config.saveCtrls();
+    });
+});
+</script>
 </html>
