@@ -12,8 +12,14 @@ mysqldump --skip-extended-insert --skip-dump-date -uroot -p[password] -P[port] [
         </code>
     </div>
     <div>
-        <h3>对比快照之间数据的变化：</h3>
         <form id="form" action="index.php" method="GET" enctype="multipart/form-data">
+            <h3>配置选择：</h3>
+            <select name="cache" id="cache">
+                <option value="">==请选择==</option>
+                <?= $html_option_cache; ?>
+            </select>
+            <input type="file" id="cache_file" value="">
+            <h3>对比快照之间数据的变化：</h3>
             <select name="file_a" id="file_a">
                 <option value="">==请选择==</option>
                 <?= $html_option; ?>
@@ -46,7 +52,12 @@ INSERT INTO `product_order` VALUES ('4028218166dcfcf40166de4b27eb000c','system',
 <script type="text/javascript" src="./js/jquery.min.js"></script>
 <script type="text/javascript">
 $(function(){
-    config = createConfig("save_input", ["file_a", "file_b", "alone_sql"]);
+    config = createConfig("save_input", [
+        "file_a",
+        "file_b",
+        "alone_sql",
+        "cache"
+    ]);
 
     $("#submit").click(function(){
         config.saveCtrls();
@@ -58,6 +69,29 @@ $(function(){
     
     $("#submit_mod_contrast").click(function(){
         config.saveCtrls();
+    });
+
+    $("#cache_file").change(function () {
+        var formData = new FormData();
+        formData.append('cache_file[]', $(this)[0].files[0]);
+        $.ajax({
+            url: '',
+            dataType:"json",
+            type: 'POST',
+            cache: false,
+            data: formData,
+            processData: false,
+            contentType: false
+        }).done(function (res) {
+            if (res.status) {
+                alert("上传成功！缓存为："+res.data);
+            } else {
+                alert("上传失败：" + res.data);
+            }
+            history.go(0);
+        }).fail(function (res) {
+            alert("上传失败：" + res.data);
+        });
     });
 });
 </script>

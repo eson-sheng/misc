@@ -14,5 +14,6 @@ return [
     'charset' => 'utf8',
     'sql_file_path' => 'dump',
     'out_path' => 'out',
+    'mysql_cache' => 'cache',
     'GBK' => strpos(strtolower(PHP_OS), 'win') === 0,
 ];

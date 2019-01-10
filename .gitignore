@@ -7,6 +7,9 @@
 # sql
 /dbdiffer/dump
 
+# cache
+/dbdiffer/cache
+
 # config
 /dbdiffer/config/local_web.php
 /MailSend/config/local_web.php

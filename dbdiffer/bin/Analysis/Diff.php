@@ -65,25 +65,46 @@ class Diff
             return TRUE;
         }
 
+        /*缓存数据结构文件上传处理*/
+        if (!empty($_FILES)) {
+            echo json_encode($this->_do_cache_file());
+            return TRUE;
+        }
+
         /*页面方式选择出要比较的文件*/
         $files = $this->FacilitateFile($this->config['sql_file_path']);
+        /*页面选出要找的结构缓存文件*/
+        $files_cache = $this->FacilitateFile($this->config['mysql_cache']);
 
         if (empty($_GET)) {
-            $this->select_file_html($files);
+            $this->select_file_html($files, $files_cache);
             return FALSE;
         } else if (empty($_GET['file_a']) || empty($_GET['file_b'])) {
             echo "<script>alert(\"参数错误，请重新选择或填写！\");window.history.back();</script>";
             return FALSE;
         } else {
-            /*业务比较*/
-            $file_a = $_GET['file_a'];
-            $file_b = $_GET['file_b'];
-            /*比较生成零时差异文件*/
-            $json = $this->compare($file_a, $file_b);
-            $arr = json_decode($json, TRUE);
-            $this->compare_file_html($arr['a'], $arr['b']);
+            /*比较结果方式调用*/
+            $this->_differ_mod();
             return TRUE;
         }
+    }
+
+    private function _differ_mod ()
+    {
+        /*业务比较*/
+        $file_a = $_GET['file_a'];
+        $file_b = $_GET['file_b'];
+        /*判断使用方式*/
+        if ($_GET['cache']) {
+            /*比较生成零时差异文件*/
+            $json = $this->compare($file_a, $file_b, $_GET['cache']);
+        } else {
+            /*比较生成零时差异文件*/
+            $json = $this->compare($file_a, $file_b);
+        }
+        /*对比结果*/
+        $arr = json_decode($json, TRUE);
+        $this->compare_file_html($arr['a'], $arr['b']);
     }
 
     /**
@@ -124,17 +145,90 @@ class Diff
     }
 
     /**
+     * 处理数据结构缓存文件
+     */
+    private function _do_cache_file ()
+    {
+        $file = 'cache_file';
+        set_time_limit(0);//设置响应时间为永久
+        if ($_FILES && isset($_FILES[$file])) {
+            $fileTmp = $_FILES[$file];
+            //判断上传文件时是否有错误
+            $error = '';
+            if ($fileTmp['error'] > 0) {
+                switch ($fileTmp['error']) {
+                    case '1':
+                        $error = '文件过大！限制为：' . ini_get('upload_max_filesize');
+                        break;
+                    case '2':
+                        $error = '文件过大！限制为：' . ini_get('upload_max_filesize');
+                        break;
+                    case '3':
+                        $error = '文件只有部分被上传';
+                        break;
+                    case '4':
+                        $error = '没有文件被上传';
+                        break;
+                    case '6':
+                        $error = '找不到临时文件夹';
+                        break;
+                    case '7':
+                        $error = '文件写入失败';
+                        break;
+                }
+            }
+            if ($error != '') {
+                return array('status' => '0', 'data' => $error);
+            }
+            /*获取文件后缀名*/
+            $ext = pathinfo($fileTmp['name'][0], PATHINFO_EXTENSION);
+
+            /*判断是否是我们自定义的类型,如果用户不设置,则使用默认*/
+            if (empty($type)) {
+                $type = array('txt', 'sql');
+            }
+
+            /*判断文集是否非法*/
+            if (!in_array($ext, $type)) {
+                return array('status' => '0', 'data' => '类型非法');
+            }
+
+            //检测上传的目标文件夹是否存在,如果不存在,则创建
+            $uploadAddr = __DIR__ . "/../../cache";
+            $fileName = "{$uploadAddr}/{$fileTmp['name'][0]}";
+
+            //移动文件,移动成功返回上传以后的文件路径
+            return move_uploaded_file(
+                $fileTmp['tmp_name'][0],
+                $fileName
+            ) ? array(
+                'status' => 1, 'data' => $fileName
+            ) : array(
+                'status' => '0', 'data' => '文件移动失败'
+            );
+        } else {
+            return array('status' => '0', 'data' => '文件传入失败');
+        }
+    }
+
+    /**
      * html页面，选择出要比较的两个sql文件
      *
      * @param $files
      * @return string
      */
-    private function select_file_html ($files)
+    private function select_file_html ($files, $files_cache)
     {
         $html_option = '';
         foreach ($files as $file) {
             $html_option .= "<option value=\"{$file}\">{$file}</option>";
         }
+
+        $html_option_cache = '';
+        foreach ($files_cache as $file_cache) {
+            $html_option_cache .= "<option value=\"{$file_cache}\">{$file_cache}</option>";
+        }
+
         return require_once __DIR__ . "/view/select_file_html.php";
     }
 
@@ -204,7 +298,7 @@ class Diff
      * @param $b
      * @return string
      */
-    private function compare ($a, $b)
+    private function compare ($a, $b, $cache = '')
     {
         // 如果不是文件则尝试转换编码
         if ($this->config["GBK"]) {
@@ -225,7 +319,11 @@ class Diff
         }
         $this->shell(["diff {$a} {$b} > ./out/tmp.txt"]);
         if (is_file(__DIR__ . "/../../out/tmp.txt")) {
-            return $this->analysis($a, $b);
+            if ($cache) {
+                return $this->analysis($a, $b, $cache);
+            } else {
+                return $this->analysis($a, $b);
+            }
         } else {
             return json_encode([
                 'status' => FALSE,
@@ -257,7 +355,7 @@ class Diff
      * @param $b
      * @return string
      */
-    private function analysis ($a, $b)
+    private function analysis ($a, $b, $cache = '')
     {
         $file_path = "./out/tmp.txt";
         $txt = $this->file_get_contents_ex($file_path);
@@ -267,10 +365,10 @@ class Diff
         foreach ($arr as $str) {
             $symbol = substr($str, 0, 1);
             if ($symbol == '<') {
-                $file_a_str .= $this->file_str($str);
+                $file_a_str .= $this->file_str($str, $cache);
             }
             if ($symbol == '>') {
-                $file_b_str .= $this->file_str($str);
+                $file_b_str .= $this->file_str($str, $cache);
             }
         }
         /*写入文件，删除零时文件*/
@@ -298,7 +396,7 @@ class Diff
      * @param $str
      * @return string
      */
-    private function file_str ($str)
+    private function file_str ($str, $cache = '')
     {
         /*找出表名字*/
         $pattern_table_name = "/INTO `(.*?)` VALUES/";
@@ -316,23 +414,28 @@ class Diff
             return FALSE;
         }
 
-        /*找出表头名称*/
-        $sql = "
-        SELECT COLUMN_NAME,COLUMN_COMMENT FROM INFORMATION_SCHEMA.Columns WHERE table_name='{$table_name}' AND table_schema='{$this->config['database']}';
+        if ($cache) {
+            dd($cache);
+        } else {
+            /*找出表头名称*/
+            $sql = "
+            SELECT COLUMN_NAME,COLUMN_COMMENT FROM INFORMATION_SCHEMA.Columns WHERE table_name='{$table_name}' AND table_schema='{$this->config['database']}';
         ";
-        $query = $this->_db->prepare($sql);
-        $query->execute();
-        $ret = $query->fetchAll();
-        /*数据拼接*/
-        $file_str_row = "--- table {$table_name}----\n\n";
-        $i = 0;
-        foreach ($ret as $row) {
-            if (!empty($table_value_arr)) {
-                $file_str_row .= "{$row['COLUMN_NAME']} {$row['COLUMN_COMMENT']} : {$table_value_arr[$i]}\n";
-                $i++;
+            $query = $this->_db->prepare($sql);
+            $query->execute();
+            $ret = $query->fetchAll();
+            /*数据拼接*/
+            $file_str_row = "--- table {$table_name}----\n\n";
+            $i = 0;
+            foreach ($ret as $row) {
+                if (!empty($table_value_arr)) {
+                    $file_str_row .= "{$row['COLUMN_NAME']} {$row['COLUMN_COMMENT']} : {$table_value_arr[$i]}\n";
+                    $i++;
+                }
             }
+            $file_str_row .= "\n";
         }
-        $file_str_row .= "\n";
+
         return $file_str_row;
     }
 
