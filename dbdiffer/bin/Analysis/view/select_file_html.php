@@ -73,7 +73,8 @@ $(function(){
 
     $("#cache_file").change(function () {
         var formData = new FormData();
-        $($(this)[0].files).each(function(i){
+        var files = $(this)[0].files;
+        $(files).each(function (i) {
             formData.append('cache_file[]', this);
         });
 
@@ -92,6 +93,16 @@ $(function(){
                     alert("上传失败！");
                 }
             });
+            /*判断上传是一个时候，直接比较*/
+            if (res.length === 1) {
+                console.log(files[0].name);
+                $("#cache").prepend('' +
+                    '<option selected="selected" value="cache/' + files[0].name + '">' + files[0].name + '</option>'
+                );
+                $("#submit").click();
+                return true;
+            }
+            /*刷新本页面*/
             history.go(0);
         }).fail(function (res) {
             alert("上传失败：" + res.data);
