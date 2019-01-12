@@ -28,6 +28,24 @@ class Diff
     public function __construct ($config)
     {
         $this->config = $config;
+        /*自动创建需求目录*/
+        if (!is_dir($config['sql_file_path'])) {
+            mkdir("./{$config['sql_file_path']}");
+        }
+        if (!is_dir($config['out_path'])) {
+            mkdir("./{$config['out_path']}");
+        }
+        if (!is_dir($config['mysql_cache'])) {
+            mkdir("./{$config['mysql_cache']}");
+        }
+    }
+
+    /**
+     * 初始化数据库
+     */
+    private function _init_pdo ()
+    {
+        $config = $this->config;
         $this->_db = new PDO($config['dsn'], $config['username'], $config['password']);
         $this->_db->setAttribute(PDO::ATTR_EMULATE_PREPARES, FALSE);
         $this->_db->exec('SET NAMES ' . $config['charset']);
@@ -446,6 +464,8 @@ class Diff
             }
             $file_str_row .= "\n";
         } else {
+            /*初始化pdo*/
+            $this->_init_pdo();
             /*找出表头名称*/
             $sql = "
             SELECT COLUMN_NAME,COLUMN_COMMENT FROM INFORMATION_SCHEMA.Columns WHERE table_name='{$table_name}' AND table_schema='{$this->config['database']}';
