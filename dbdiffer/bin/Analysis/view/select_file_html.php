@@ -18,7 +18,7 @@ mysqldump --skip-extended-insert --skip-dump-date -uroot -p[password] -P[port] [
                 <option value="">==请选择==</option>
                 <?= $html_option_cache; ?>
             </select>
-            <input type="file" id="cache_file" value="">
+            <input type="file" id="cache_file" value="" multiple="multiple" />
             <h3>对比快照之间数据的变化：</h3>
             <select name="file_a" id="file_a">
                 <option value="">==请选择==</option>
@@ -73,7 +73,10 @@ $(function(){
 
     $("#cache_file").change(function () {
         var formData = new FormData();
-        formData.append('cache_file[]', $(this)[0].files[0]);
+        $($(this)[0].files).each(function(i){
+            formData.append('cache_file[]', this);
+        });
+
         $.ajax({
             url: '',
             dataType:"json",
@@ -83,11 +86,12 @@ $(function(){
             processData: false,
             contentType: false
         }).done(function (res) {
-            if (res.status) {
-                alert("上传成功！缓存为："+res.data);
-            } else {
-                alert("上传失败：" + res.data);
-            }
+            $(res).each(function(i){
+                console.log(res[i]);
+                if (!res[i].status) {
+                    alert("上传失败！");
+                }
+            });
             history.go(0);
         }).fail(function (res) {
             alert("上传失败：" + res.data);

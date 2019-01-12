@@ -66,7 +66,7 @@ class Diff
         }
 
         /*缓存数据结构文件上传处理*/
-        if (!empty($_FILES)) {
+        if (!empty($_FILES['cache_file'])) {
             echo json_encode($this->_do_cache_file());
             return TRUE;
         }
@@ -155,57 +155,70 @@ class Diff
             $fileTmp = $_FILES[$file];
             //判断上传文件时是否有错误
             $error = '';
-            if ($fileTmp['error'] > 0) {
-                switch ($fileTmp['error']) {
-                    case '1':
-                        $error = '文件过大！限制为：' . ini_get('upload_max_filesize');
-                        break;
-                    case '2':
-                        $error = '文件过大！限制为：' . ini_get('upload_max_filesize');
-                        break;
-                    case '3':
-                        $error = '文件只有部分被上传';
-                        break;
-                    case '4':
-                        $error = '没有文件被上传';
-                        break;
-                    case '6':
-                        $error = '找不到临时文件夹';
-                        break;
-                    case '7':
-                        $error = '文件写入失败';
-                        break;
+            $return = array();
+            foreach ($fileTmp['error'] AS $i_error => $file_error) {
+                if ($file_error[$i_error] > 0) {
+                    switch ($file_error[$i_error]) {
+                        case '1':
+                            $error = '文件过大！限制为：' . ini_get('upload_max_filesize');
+                            break;
+                        case '2':
+                            $error = '文件过大！限制为：' . ini_get('upload_max_filesize');
+                            break;
+                        case '3':
+                            $error = '文件只有部分被上传';
+                            break;
+                        case '4':
+                            $error = '没有文件被上传';
+                            break;
+                        case '6':
+                            $error = '找不到临时文件夹';
+                            break;
+                        case '7':
+                            $error = '文件写入失败';
+                            break;
+                    }
+                    if ($error != '') {
+                        $return[] = array('status' => '0', 'data' => $error);
+                    }
                 }
             }
-            if ($error != '') {
-                return array('status' => '0', 'data' => $error);
-            }
-            /*获取文件后缀名*/
-            $ext = pathinfo($fileTmp['name'][0], PATHINFO_EXTENSION);
-
-            /*判断是否是我们自定义的类型,如果用户不设置,则使用默认*/
-            if (empty($type)) {
-                $type = array('txt', 'sql');
+            if ($return) {
+                return $return;
             }
 
-            /*判断文集是否非法*/
-            if (!in_array($ext, $type)) {
-                return array('status' => '0', 'data' => '类型非法');
+            foreach ($fileTmp['name'] AS $i_name => $file_name) {
+                /*获取文件后缀名*/
+                $ext = pathinfo($file_name, PATHINFO_EXTENSION);
+                /*判断是否是我们自定义的类型,如果用户不设置,则使用默认*/
+                if (empty($type)) {
+                    $type = array('txt', 'sql');
+                }
+                /*判断文集是否非法*/
+                if (!in_array($ext, $type)) {
+                    $return[] = array('status' => '0', 'data' => '类型非法');
+                }
+            }
+            if ($return) {
+                return $return;
             }
 
-            //检测上传的目标文件夹是否存在,如果不存在,则创建
-            $uploadAddr = __DIR__ . "/../../cache";
-            $fileName = "{$uploadAddr}/{$fileTmp['name'][0]}";
+            foreach ($fileTmp['tmp_name'] AS $i_tmp_name => $tmp_name) {
+                //检测上传的目标文件夹是否存在,如果不存在,则创建
+                $uploadAddr = __DIR__ . "/../../cache";
+                $fileName = "{$uploadAddr}/{$fileTmp['name'][$i_tmp_name]}";
 
-            //移动文件,移动成功返回上传以后的文件路径
-            return move_uploaded_file(
-                $fileTmp['tmp_name'][0],
-                $fileName
-            ) ? array(
-                'status' => 1, 'data' => $fileName
-            ) : array(
-                'status' => '0', 'data' => '文件移动失败'
-            );
+                //移动文件,移动成功返回上传以后的文件路径
+                $return[] = move_uploaded_file(
+                    $tmp_name,
+                    $fileName
+                ) ? array(
+                    'status' => 1, 'data' => $fileName
+                ) : array(
+                    'status' => '0', 'data' => '文件移动失败'
+                );
+            }
+            return $return;
         } else {
             return array('status' => '0', 'data' => '文件传入失败');
         }
@@ -415,7 +428,23 @@ class Diff
         }
 
         if ($cache) {
-            dd($cache);
+            /*获取缓存文件为字符串*/
+            $cache_txt = $this->file_get_contents_ex("./{$cache}");
+            /*根据换行符切割为数组*/
+            $cache_arr = explode("\r\n", $cache_txt);
+            /*循环解析*/
+            $file_str_row = "--- table {$table_name}----\n\n";
+            $i = 0;
+            foreach ($cache_arr AS $cache) {
+                $cache_tmp = explode("\t", $cache);
+                if ($table_name == $cache_tmp[0]) {
+                    if (!empty($table_value_arr[$i])) {
+                        $file_str_row .= "{$cache_tmp[1]} {$cache_tmp[2]} : {$table_value_arr[$i]}\n";
+                    }
+                    $i++;
+                }
+            }
+            $file_str_row .= "\n";
         } else {
             /*找出表头名称*/
             $sql = "
