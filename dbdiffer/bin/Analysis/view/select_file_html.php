@@ -20,6 +20,9 @@ mysqldump --skip-extended-insert --skip-dump-date -uroot -p[password] -P[port] [
             </select>
             <input type="file" id="cache_file" value="" multiple="multiple" />
             <h3>对比快照之间数据的变化：</h3>
+            <p>
+                <input type="file" id="dump_file" value="" multiple="multiple"/>
+            </p>
             <select name="file_a" id="file_a">
                 <option value="">==请选择==</option>
                 <?= $html_option; ?>
@@ -72,9 +75,10 @@ $(function(){
     });
 
     $("#cache_file").change(function () {
+
         var formData = new FormData();
         var files = $(this)[0].files;
-        $(files).each(function (i) {
+        $(files).each(function () {
             formData.append('cache_file[]', this);
         });
 
@@ -96,10 +100,10 @@ $(function(){
             /*判断上传是一个时候，直接比较*/
             if (res.length === 1) {
                 console.log(files[0].name);
-                $("#cache").prepend('' +
-                    '<option selected="selected" value="cache/' + files[0].name + '">' + files[0].name + '</option>'
+                $("#cache").append('' +
+                    '<option selected="selected" value="cache/' + files[0].name + '">cache/' + files[0].name + '</option>'
                 );
-                $("#submit").click();
+                // $("#submit").click();
                 return true;
             }
             /*刷新本页面*/
@@ -108,6 +112,38 @@ $(function(){
             alert("上传失败：" + res.data);
         });
     });
+
+    $("#dump_file").change(function () {
+
+        var formData = new FormData();
+        var files = $(this)[0].files;
+        $(files).each(function () {
+            formData.append('dump_file[]', this);
+        });
+
+        $.ajax({
+            url: '',
+            dataType:"json",
+            type: 'POST',
+            cache: false,
+            data: formData,
+            processData: false,
+            contentType: false
+        }).done(function (res) {
+            $(res).each(function(i){
+                console.log(res[i]);
+                if (!res[i].status) {
+                    alert("上传失败！");
+                }
+            });
+            /*刷新本页面*/
+            history.go(0);
+        }).fail(function (res) {
+            alert("上传失败：" + res.data);
+        });
+
+    });
+
 });
 </script>
 </html>

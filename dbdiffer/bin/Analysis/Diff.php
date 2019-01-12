@@ -85,7 +85,12 @@ class Diff
 
         /*缓存数据结构文件上传处理*/
         if (!empty($_FILES['cache_file'])) {
-            echo json_encode($this->_do_cache_file());
+            echo json_encode($this->_do_cache_file('cache_file'));
+            return TRUE;
+        }
+
+        if (!empty($_FILES['dump_file'])) {
+            echo json_encode($this->_do_cache_file('dump_file'));
             return TRUE;
         }
 
@@ -164,10 +169,11 @@ class Diff
 
     /**
      * 处理数据结构缓存文件
+     * @param $file
+     * @return array
      */
-    private function _do_cache_file ()
+    private function _do_cache_file ($file)
     {
-        $file = 'cache_file';
         set_time_limit(0);//设置响应时间为永久
         if ($_FILES && isset($_FILES[$file])) {
             $fileTmp = $_FILES[$file];
@@ -223,7 +229,23 @@ class Diff
 
             foreach ($fileTmp['tmp_name'] AS $i_tmp_name => $tmp_name) {
                 //检测上传的目标文件夹是否存在,如果不存在,则创建
-                $uploadAddr = __DIR__ . "/../../cache";
+                $ext = pathinfo(
+                    $fileTmp['name'][$i_tmp_name],
+                    PATHINFO_EXTENSION
+                );
+
+                if ($ext == 'txt') {
+                    $uploadAddr = __DIR__ . "/../../cache";
+                }
+
+                if ($ext == 'sql') {
+                    $uploadAddr = __DIR__ . "/../../dump";
+                }
+
+                if (empty($uploadAddr)) {
+                    return array('status' => 0, 'data' => '存储目录错误！');
+                }
+
                 $fileName = "{$uploadAddr}/{$fileTmp['name'][$i_tmp_name]}";
 
                 //移动文件,移动成功返回上传以后的文件路径
@@ -233,7 +255,7 @@ class Diff
                 ) ? array(
                     'status' => 1, 'data' => $fileName
                 ) : array(
-                    'status' => '0', 'data' => '文件移动失败'
+                    'status' => 0, 'data' => '文件移动失败'
                 );
             }
             return $return;
